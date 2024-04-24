@@ -10,6 +10,14 @@ type RegisterRequest struct {
 	Address              string `json:"address"`
 }
 
+type RegisterResponse struct {
+	Name     string `json:"name"`
+	UserName string `json:"user_name"`
+	Email    string `json:"email"`
+	Gender   string `json:"gender"`
+	Address  string `json:"address"`
+}
+
 type LoginRequest struct {
 	Email                string `json:"email"`
 	Password             string `json:"password"`

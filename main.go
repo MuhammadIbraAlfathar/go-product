@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/MuhammadIbraAlfathar/go-product/config"
+	"github.com/MuhammadIbraAlfathar/go-product/route"
 	"github.com/gin-gonic/gin"
 	"log"
 )
@@ -20,6 +21,8 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	route.UserRouter(api)
 
 	err := r.Run(fmt.Sprintf(":%v", config.ENV.PORT))
 	if err != nil {
