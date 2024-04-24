@@ -10,7 +10,7 @@ import (
 type UserRepository interface {
 	RegisterUser(tx *sql.Tx, req *entity.Users) error
 	FindUsers(tx *sql.Tx) ([]entity.Users, error)
-	//FindUserByEmail(tx *sql.Tx, email string) (*entity.Users, error)
+	FindUserByEmail(tx *sql.Tx, email string) (*entity.Users, error)
 	//EmailExist(email string) bool
 }
 
@@ -82,4 +82,43 @@ func (r userRepositoryImpl) FindUsers(tx *sql.Tx) ([]entity.Users, error) {
 	}
 
 	return users, nil
+}
+
+func (r userRepositoryImpl) FindUserByEmail(tx *sql.Tx, email string) (*entity.Users, error) {
+	var users entity.Users
+	query := "select id, name, user_name, email, password, gender, address from users where email = ?"
+	rows := tx.QueryRow(query, email)
+	//if err != nil {
+	//	log.Println("Error Query get User by Email")
+	//	errorHelper := &helper.InternalServerError{
+	//		Message: "Internal Server Error",
+	//	}
+	//	return nil, errorHelper
+	//}
+
+	err := rows.Scan(&users.Id, &users.Name, &users.UserName, &users.Email, &users.Password, &users.Gender, &users.Address)
+	if err != nil {
+		log.Println("Error Scan User")
+		errorHelper := &helper.NotfoundError{
+			Message: "Data User Not Found",
+		}
+		return nil, errorHelper
+	}
+
+	//for rows.Next() {
+	//	user := entity.Users{}
+	//	err = rows.Scan(&user.Id, &user.UserName, &user.Email, &user.Gender, &user.Address)
+	//	if err != nil {
+	//		log.Println("Error Scan User")
+	//		errorHelper := &helper.NotfoundError{
+	//			Message: "Data User Not Found",
+	//		}
+	//		return nil, errorHelper
+	//	}
+	//
+	//	users = append(users, &user)
+	//}
+
+	return &users, nil
+
 }

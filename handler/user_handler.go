@@ -57,3 +57,25 @@ func (h *AuthHandler) FindUsers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (h *AuthHandler) Login(c *gin.Context) {
+	var loginRequest dto.LoginRequest
+	err := c.ShouldBindJSON(&loginRequest)
+	if err != nil {
+		panic(err)
+	}
+	user, err := h.service.LoginUser(&loginRequest)
+	if err != nil {
+		helper.HandlerError(c, err)
+		return
+	}
+
+	res := helper.Response(
+		dto.ResponseParams{
+			StatusCode: http.StatusOK,
+			Message:    "Success Login",
+			Data:       user,
+		})
+
+	c.JSON(http.StatusOK, res)
+}

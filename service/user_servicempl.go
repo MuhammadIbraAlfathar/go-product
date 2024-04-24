@@ -12,6 +12,7 @@ import (
 type UserService interface {
 	RegisterUser(req *dto.RegisterRequest) error
 	FindUsers() ([]dto.RegisterResponse, error)
+	LoginUser(req *dto.LoginRequest) (*dto.LoginResponse, error)
 }
 
 type userServiceImpl struct {
@@ -40,13 +41,20 @@ func (s userServiceImpl) RegisterUser(req *dto.RegisterRequest) error {
 		panic(err)
 	}
 
+	hashPassword, err := helper.HashPassword(req.Password)
+	if err != nil {
+		return &helper.InternalServerError{
+			Message: "Internal Server Error",
+		}
+	}
+
 	defer helper.CommitOrRollback(tx)
 
 	user := entity.Users{
 		Name:     req.Name,
 		UserName: req.UserName,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: hashPassword,
 		Gender:   req.Gender,
 		Address:  req.Address,
 	}
@@ -84,11 +92,11 @@ func ToUserResponses(users []entity.Users) []dto.RegisterResponse {
 func (s userServiceImpl) FindUsers() ([]dto.RegisterResponse, error) {
 	tx, err := s.DB.Begin()
 	if err != nil {
+		log.Println("Erorr DB userService")
 		errorHelper := &helper.InternalServerError{
 			Message: "Internal Server Error",
 		}
 		return nil, errorHelper
-		log.Println("Erorr DB userService")
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -102,4 +110,46 @@ func (s userServiceImpl) FindUsers() ([]dto.RegisterResponse, error) {
 	//}
 
 	return ToUserResponses(findUsers), err
+}
+
+func (s userServiceImpl) LoginUser(req *dto.LoginRequest) (*dto.LoginResponse, error) {
+	var data dto.LoginResponse
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		log.Println("Erorr DB userService")
+		errorHelper := &helper.InternalServerError{
+			Message: "Internal Server Error",
+		}
+		return nil, errorHelper
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	//cek email user
+	user, err := s.UserRepository.FindUserByEmail(tx, req.Email)
+	if err != nil {
+		log.Println("Salah email")
+		return nil, &helper.NotfoundError{
+			Message: "Wrong email or password",
+		}
+	}
+
+	//verifikasi password
+	err = helper.ValidatePassword(user.Password, req.Password)
+	if err != nil {
+		log.Println("Salah password")
+		return nil, &helper.InternalServerError{
+			Message: "Wrong email or password",
+		}
+	}
+
+	data = dto.LoginResponse{
+		ID:       user.Id,
+		UserName: user.UserName,
+		Name:     user.Name,
+	}
+
+	return &data, nil
+
 }

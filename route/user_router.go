@@ -15,6 +15,7 @@ func UserRouter(api *gin.RouterGroup) {
 	userHandler := handler.NewAuthHandler(userService)
 
 	api.POST("/register", userHandler.RegisterUser)
+	api.POST("/login", userHandler.Login)
 	api.GET("/register", userHandler.FindUsers)
 
 }
