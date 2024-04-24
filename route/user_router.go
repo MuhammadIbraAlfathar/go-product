@@ -18,4 +18,6 @@ func UserRouter(api *gin.RouterGroup) {
 	api.POST("/login", userHandler.Login)
 	api.GET("/register", userHandler.FindUsers)
 
+	///testt
+
 }
