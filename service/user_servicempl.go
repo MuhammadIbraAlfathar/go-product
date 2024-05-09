@@ -29,16 +29,23 @@ func NewUserServiceImpl(userRepository repository.UserRepository, DB *sql.DB) *u
 
 func (s userServiceImpl) RegisterUser(req *dto.RegisterRequest) error {
 
+	tx, err := s.DB.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	//validasi email ketika sudah digunakan
+	if emailExist, _ := s.UserRepository.EmailExist(tx, req.Email); emailExist {
+		return &helper.BadRequestError{
+			Message: "Email already registered",
+		}
+	}
+
 	// validate password confirmation
 	if req.Password != req.PasswordConfirmation {
 		return &helper.BadRequestError{
 			Message: "Password not match",
 		}
-	}
-
-	tx, err := s.DB.Begin()
-	if err != nil {
-		panic(err)
 	}
 
 	hashPassword, err := helper.HashPassword(req.Password)

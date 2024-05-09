@@ -11,7 +11,7 @@ type UserRepository interface {
 	RegisterUser(tx *sql.Tx, req *entity.Users) error
 	FindUsers(tx *sql.Tx) ([]entity.Users, error)
 	FindUserByEmail(tx *sql.Tx, email string) (*entity.Users, error)
-	//EmailExist(email string) bool
+	EmailExist(tx *sql.Tx, email string) (bool, error)
 }
 
 type userRepositoryImpl struct {
@@ -120,5 +120,25 @@ func (r userRepositoryImpl) FindUserByEmail(tx *sql.Tx, email string) (*entity.U
 	//}
 
 	return &users, nil
+
+}
+
+func (r userRepositoryImpl) EmailExist(tx *sql.Tx, email string) (bool, error) {
+	var users entity.Users
+	query := "SELECT email from users where email = ?"
+	rows := tx.QueryRow(query, email)
+
+	err := rows.Scan(&users.Email)
+
+	if err != nil {
+		log.Println("Error Scan Email User")
+		errorHelper := &helper.NotfoundError{
+			Message: "Email User Not Found",
+		}
+
+		return false, errorHelper
+	}
+
+	return true, nil
 
 }
